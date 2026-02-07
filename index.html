@@ -87,7 +87,7 @@ select:focus { outline: none; border-color: #0071e3; }
         <div class="nav-stats">
             <div class="nav-stat-item"><span id="navCompleted">0</span> / <span id="navTotal">0</span></div>
             <div class="nav-stat-item"><span id="navPercentage">0%</span> Complete</div>
-            <button class="btn btn-outline" onclick="openLeaderboard()">Leaderboard</button>
+            <button class="btn btn-outline" onclick="openLeaderboard()" disabled style="opacity: 0.5; cursor: not-allowed;" title="Leaderboard is currently disabled">Leaderboard</button>
             <div class="auth-buttons" id="authButtons">
                 <button class="btn btn-secondary" onclick="netlifyIdentity.open('login')">Log In</button>
                 <button class="btn btn-primary" onclick="netlifyIdentity.open('signup')">Sign Up</button>
