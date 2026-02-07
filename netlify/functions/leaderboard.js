@@ -1,53 +1,84 @@
 exports.handler = async (event, context) => {
-  const { MY_SITE_ID, NETLIFY_ACCESS_TOKEN } = process.env;
+  // CONFIGURATION:
+  // 1. NETLIFY_ACCESS_TOKEN: Your Personal Access Token
+  // 2. SITE_NAME_OVERRIDE: Optional subdomain override (e.g. "neon-lamington-800d68")
+  const { NETLIFY_ACCESS_TOKEN, SITE_NAME_OVERRIDE } = process.env;
 
-  // 1. Check for missing vars
-  if (!MY_SITE_ID || !NETLIFY_ACCESS_TOKEN) {
+  // Use the override if provided, otherwise default to your site name
+  const targetSiteName = SITE_NAME_OVERRIDE || 'neon-lamington-800d68';
+
+  if (!NETLIFY_ACCESS_TOKEN) {
     return {
-      statusCode: 200,
-      body: JSON.stringify({
-        error: "Configuration Missing",
-        message: "Zero solvers? Everyone must be in 'stealth mode' because heaven forbid anyone knows you're actually putting in the effort."
-      })
+      statusCode: 500,
+      body: JSON.stringify({ error: "Setup Error: NETLIFY_ACCESS_TOKEN is missing." })
     };
   }
 
   try {
-    // 2. Fetch from Netlify API
-    const response = await fetch(`https://api.netlify.com/api/v1/sites/${MY_SITE_ID.trim()}/identity/users`, {
-      headers: {
-        'Authorization': `Bearer ${NETLIFY_ACCESS_TOKEN.trim()}`,
-        'Content-Type': 'application/json'
-      }
+    // STEP 1: Fetch list of sites to find the correct ID by Name
+    console.log(`[Leaderboard] Looking up site: ${targetSiteName}...`);
+    
+    const sitesResponse = await fetch('https://api.netlify.com/api/v1/sites', {
+      headers: { 'Authorization': `Bearer ${NETLIFY_ACCESS_TOKEN.trim()}` }
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Netlify API Error:", response.status, errorText);
+    if (!sitesResponse.ok) {
+      throw new Error(`Failed to list sites. API Status: ${sitesResponse.status}`);
+    }
+
+    const sites = await sitesResponse.json();
+    const site = sites.find(s => s.name === targetSiteName || s.custom_domain === targetSiteName);
+
+    if (!site) {
       return {
-        statusCode: response.status,
+        statusCode: 404,
         body: JSON.stringify({ 
-          error: `Netlify API Error ${response.status}`,
-          details: errorText
+          error: "Site Not Found", 
+          details: `Could not find a site named '${targetSiteName}' in your account.` 
         })
       };
     }
 
-    const users = await response.json();
+    console.log(`[Leaderboard] Found site. ID: ${site.id}`);
+
+    // STEP 2: Check if Identity is actually enabled (Hard Fail)
+    // Note: Some API responses nest capabilities, others don't. We check safely.
+    const identityStatus = site.capabilities?.identity?.status || 'unknown';
     
-    // 3. Process Leaderboard
-    // The API might return an array or an object with a users array
-    const userList = Array.isArray(users) ? users : (users.users || []);
-    
-    const leaderboard = userList.map(user => {
-      const completed = (user.user_metadata && user.user_metadata.completed) ? user.user_metadata.completed.length : 0;
-      return {
-        name: (user.user_metadata && user.user_metadata.full_name) || user.email.split('@')[0],
-        score: completed
+    // If we can read the status and it's not active/enabled
+    if (identityStatus !== 'active' && identityStatus !== 'enabled') {
+       return {
+        statusCode: 400,
+        body: JSON.stringify({ 
+          error: "Identity Not Enabled", 
+          details: `Netlify Identity is '${identityStatus}' for this site. Enable it in the Dashboard.` 
+        })
       };
-    })
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 10);
+    }
+
+    // STEP 3: Fetch Users using the retrieved ID
+    const usersResponse = await fetch(`https://api.netlify.com/api/v1/sites/${site.id}/identity/users`, {
+      headers: { 'Authorization': `Bearer ${NETLIFY_ACCESS_TOKEN.trim()}` }
+    });
+
+    if (!usersResponse.ok) {
+      throw new Error(`Failed to fetch users. API Status: ${usersResponse.status}`);
+    }
+
+    const usersData = await usersResponse.json();
+    const userList = Array.isArray(usersData) ? usersData : (usersData.users || []);
+
+    const leaderboard = userList
+      .map(user => {
+        const completed = (user.user_metadata && user.user_metadata.completed) ? user.user_metadata.completed.length : 0;
+        return {
+          name: (user.user_metadata && user.user_metadata.full_name) || user.email.split('@')[0],
+          score: completed
+        };
+      })
+      .filter(u => u.name)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10);
 
     return {
       statusCode: 200,
@@ -58,7 +89,7 @@ exports.handler = async (event, context) => {
     };
 
   } catch (error) {
-    console.error("Function Error:", error);
+    console.error("[Leaderboard Critical Error]:", error.message);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: "Internal Server Error", details: error.message })

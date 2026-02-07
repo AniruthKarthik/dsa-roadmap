@@ -350,9 +350,8 @@ async function openLeaderboard() {
         if (data.error) {
             content.innerHTML = `
                 <div style="padding: 20px; color: #c62828;">
-                    <p><strong>Leaderboard Unavailable</strong></p>
-                    <p style="font-size: 13px; margin-top: 8px; font-family: monospace;">Error: ${data.error}</p>
-                    <p style="font-size: 12px; margin-top: 8px; color: #6e6e73;">Check MY_SITE_ID and NETLIFY_ACCESS_TOKEN in Netlify Settings.</p>
+                    <p><strong>${data.error}</strong></p>
+                    <p style="font-size: 13px; margin-top: 8px;">${data.details || 'Check console for logs.'}</p>
                 </div>`;
             return;
         }
