@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DSA Practice Tracker</title>
+<title>Master DSA</title>
 <script type="text/javascript" src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -11,8 +11,16 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .navbar { background: rgba(255,255,255,0.8); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid #d2d2d7; }
 .nav-content { max-width: 1400px; margin: 0 auto; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
 .nav-title { font-size: 21px; font-weight: 600; }
-.nav-stats { display: flex; gap: 32px; font-size: 14px; color: #6e6e73; }
+.nav-stats { display: flex; gap: 24px; font-size: 14px; color: #6e6e73; align-items: center; }
 .nav-stat-item span { font-weight: 600; color: #1d1d1f; }
+.auth-buttons { display: flex; gap: 12px; margin-left: 16px; }
+.btn { padding: 8px 16px; border-radius: 18px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: none; }
+.btn-primary { background: #0071e3; color: white; }
+.btn-primary:hover { background: #0077ed; }
+.btn-secondary { background: rgba(0,0,0,0.05); color: #1d1d1f; }
+.btn-secondary:hover { background: rgba(0,0,0,0.1); }
+.btn-outline { background: transparent; border: 1px solid #d2d2d7; color: #1d1d1f; }
+.btn-outline:hover { border-color: #0071e3; color: #0071e3; }
 .container { max-width: 1400px; margin: 0 auto; padding: 48px 24px; }
 .hero { text-align: center; margin-bottom: 64px; }
 .hero h1 { font-size: 56px; font-weight: 600; margin-bottom: 12px; }
@@ -28,11 +36,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .filter-label { font-size: 14px; font-weight: 500; color: #6e6e73; }
 select { padding: 8px 12px; border: 1px solid #d2d2d7; border-radius: 8px; font-size: 14px; background: white; cursor: pointer; }
 select:focus { outline: none; border-color: #0071e3; }
-.resources { background: white; padding: 24px; border-radius: 12px; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-.resources h3 { font-size: 17px; font-weight: 600; margin-bottom: 16px; }
-.resource-links { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
-.resource-link { color: #0071e3; text-decoration: none; font-size: 14px; padding: 8px 0; }
-.resource-link:hover { opacity: 0.7; }
 .category { margin-bottom: 48px; }
 .category-header { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #d2d2d7; }
 .category-title { font-size: 32px; font-weight: 600; }
@@ -55,6 +58,22 @@ select:focus { outline: none; border-color: #0071e3; }
 .difficulty-hard { background: #ffebee; color: #c62828; }
 .reset-button { position: fixed; bottom: 32px; right: 32px; background: #1d1d1f; color: white; border: none; padding: 12px 24px; border-radius: 24px; cursor: pointer; font-size: 14px; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.2s; }
 .reset-button:hover { background: #424245; transform: translateY(-2px); }
+
+/* Modal Styles */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+.modal { background: white; width: 90%; max-width: 500px; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); overflow: hidden; animation: modalSlide 0.3s ease; }
+.modal-header { padding: 24px; border-bottom: 1px solid #d2d2d7; display: flex; justify-content: space-between; align-items: center; }
+.modal-title { font-size: 24px; font-weight: 600; }
+.close-modal { background: none; border: none; font-size: 24px; cursor: pointer; color: #6e6e73; }
+.modal-body { padding: 0; max-height: 60vh; overflow-y: auto; }
+.leaderboard-list { list-style: none; }
+.leaderboard-item { display: flex; justify-content: space-between; padding: 16px 24px; border-bottom: 1px solid #f5f5f7; }
+.leaderboard-item:last-child { border-bottom: none; }
+.leaderboard-rank { font-weight: 600; width: 30px; color: #6e6e73; }
+.leaderboard-name { flex: 1; font-weight: 500; }
+.leaderboard-score { font-weight: 600; color: #0071e3; }
+@keyframes modalSlide { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
 @media (max-width: 768px) {
     .hero h1 { font-size: 40px; }
     .nav-stats { display: none; }
@@ -64,12 +83,18 @@ select:focus { outline: none; border-color: #0071e3; }
 <body>
 <nav class="navbar">
     <div class="nav-content">
-        <div class="nav-title">DSA Practice Tracker</div>
+        <div class="nav-title">Master DSA</div>
         <div class="nav-stats">
             <div class="nav-stat-item"><span id="navCompleted">0</span> / <span id="navTotal">0</span></div>
             <div class="nav-stat-item"><span id="navPercentage">0%</span> Complete</div>
-            <div class="nav-stat-item">
-                <div data-netlify-identity-menu></div>
+            <button class="btn btn-outline" onclick="openLeaderboard()">Leaderboard</button>
+            <div class="auth-buttons" id="authButtons">
+                <button class="btn btn-secondary" onclick="netlifyIdentity.open('login')">Log In</button>
+                <button class="btn btn-primary" onclick="netlifyIdentity.open('signup')">Sign Up</button>
+            </div>
+            <div class="auth-buttons" id="userMenu" style="display: none;">
+                <span id="userName" style="align-self: center; margin-right: 12px; font-weight: 500;"></span>
+                <button class="btn btn-secondary" onclick="netlifyIdentity.logout()">Log Out</button>
             </div>
         </div>
     </div>
@@ -122,6 +147,21 @@ select:focus { outline: none; border-color: #0071e3; }
 </div>
 
 <button class="reset-button" onclick="resetProgress()">Reset Progress</button>
+
+<!-- Leaderboard Modal -->
+<div class="modal-overlay" id="leaderboardModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Top Solvers</h3>
+            <button class="close-modal" onclick="closeLeaderboard()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div id="leaderboardContent" style="padding: 24px; text-align: center; color: #6e6e73;">
+                Loading...
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
 const difficulties = {"1": "easy", "2": "medium", "3": "medium", "4": "hard", "5": "medium", "8": "medium", "9": "easy", "11": "medium", "12": "medium", "13": "easy", "15": "medium", "16": "medium", "17": "medium", "18": "medium", "19": "medium", "20": "easy", "21": "easy", "22": "medium", "23": "hard", "24": "medium", "25": "hard", "26": "easy", "27": "easy", "28": "medium", "31": "medium", "32": "hard", "33": "medium", "34": "medium", "35": "easy", "37": "hard", "39": "medium", "40": "medium", "41": "hard", "43": "medium", "45": "medium", "46": "medium", "48": "medium", "49": "medium", "51": "hard", "53": "medium", "54": "medium", "55": "medium", "56": "medium", "57": "medium", "59": "medium", "60": "hard", "61": "medium", "62": "medium", "63": "medium", "64": "medium", "65": "hard", "66": "easy", "67": "easy", "69": "easy", "70": "easy", "71": "easy", "72": "hard", "73": "medium", "74": "medium", "75": "medium", "76": "hard", "77": "medium", "78": "medium", "79": "medium", "80": "medium", "81": "medium", "82": "medium", "83": "easy", "84": "hard", "85": "hard", "86": "medium", "88": "easy", "90": "medium", "91": "medium", "92": "medium", "94": "easy", "95": "medium", "96": "medium", "98": "medium", "100": "easy", "101": "easy", "102": "medium", "103": "medium", "104": "easy", "105": "medium", "110": "easy", "114": "medium", "120": "medium", "121": "easy", "122": "medium", "123": "hard", "124": "hard", "125": "easy", "126": "hard", "127": "hard", "130": "medium", "131": "medium", "132": "hard", "133": "medium", "134": "medium", "135": "hard", "136": "easy", "137": "medium", "138": "medium", "139": "medium", "140": "hard", "141": "easy", "143": "medium", "145": "easy", "146": "medium", "150": "medium", "151": "medium", "152": "medium", "153": "medium", "155": "medium", "160": "easy", "162": "medium", "167": "medium", "173": "medium", "188": "hard", "189": "medium", "191": "easy", "198": "medium", "199": "medium", "200": "medium", "202": "easy", "206": "easy", "207": "medium", "208": "medium", "209": "medium", "210": "medium", "211": "medium", "212": "hard", "213": "medium", "214": "hard", "215": "medium", "219": "easy", "221": "medium", "224": "hard", "225": "easy", "226": "easy", "227": "medium", "230": "medium", "231": "easy", "232": "easy", "234": "easy", "235": "medium", "236": "medium", "238": "medium", "239": "hard", "241": "medium", "242": "easy", "253": "medium", "257": "easy", "259": "medium", "268": "easy", "283": "easy", "287": "medium", "289": "medium", "295": "hard", "297": "hard", "300": "medium", "301": "hard", "322": "medium", "328": "medium", "337": "medium", "338": "easy", "342": "easy", "344": "easy", "345": "easy", "347": "medium", "349": "easy", "374": "easy", "377": "medium", "392": "easy", "406": "medium", "410": "hard", "416": "medium", "438": "medium", "443": "medium", "451": "medium", "455": "easy", "494": "medium", "509": "easy", "518": "medium", "540": "medium", "541": "easy", "547": "medium", "567": "medium", "621": "medium", "643": "easy", "647": "medium", "704": "easy", "713": "medium", "733": "easy", "739": "medium", "740": "medium", "746": "easy", "767": "medium", "844": "easy", "875": "medium", "876": "easy", "881": "medium", "904": "medium", "905": "easy", "921": "medium", "977": "easy", "1004": "medium", "1054": "medium", "1143": "medium", "1249": "medium", "1438": "medium", "1493": "medium", "1598": "easy", "1658": "medium", "1838": "medium", "2095": "medium", "2337": "medium", "2390": "medium", "2461": "medium", "2516": "medium", "2762": "hard", "2779": "medium", "2938": "medium", "2981": "medium"};
@@ -209,15 +249,18 @@ function init() {
     // Netlify Identity Events
     if (window.netlifyIdentity) {
         netlifyIdentity.on('init', user => {
+            updateAuthUI(user);
             renderCategories();
             updateStats();
         });
         netlifyIdentity.on('login', user => {
             netlifyIdentity.close();
+            updateAuthUI(user);
             renderCategories();
             updateStats();
         });
         netlifyIdentity.on('logout', () => {
+            updateAuthUI(null);
             renderCategories();
             updateStats();
         });
@@ -225,6 +268,64 @@ function init() {
     
     renderCategories();
     updateStats();
+}
+
+function updateAuthUI(user) {
+    const authButtons = document.getElementById('authButtons');
+    const userMenu = document.getElementById('userMenu');
+    const userName = document.getElementById('userName');
+
+    if (user) {
+        authButtons.style.display = 'none';
+        userMenu.style.display = 'flex';
+        userName.textContent = user.user_metadata.full_name || user.email;
+    } else {
+        authButtons.style.display = 'flex';
+        userMenu.style.display = 'none';
+        userName.textContent = '';
+    }
+}
+
+async function openLeaderboard() {
+    const modal = document.getElementById('leaderboardModal');
+    const content = document.getElementById('leaderboardContent');
+    modal.style.display = 'flex';
+    
+    try {
+        const response = await fetch('/.netlify/functions/leaderboard');
+        const data = await response.json();
+        
+        if (data.error) {
+            content.innerHTML = '<p>Failed to load leaderboard. Please try again later.</p>';
+            return;
+        }
+
+        if (data.length === 0) {
+            content.innerHTML = '<p>No data yet. Be the first!</p>';
+            return;
+        }
+
+        const html = `
+            <ul class="leaderboard-list">
+                ${data.map((user, index) => `
+                    <li class="leaderboard-item">
+                        <span class="leaderboard-rank">#${index + 1}</span>
+                        <span class="leaderboard-name">${user.name}</span>
+                        <span class="leaderboard-score">${user.score} solved</span>
+                    </li>
+                `).join('')}
+            </ul>
+        `;
+        content.innerHTML = html;
+        
+    } catch (err) {
+        content.innerHTML = '<p>Error loading leaderboard. Ensure functions are deployed.</p>';
+        console.error(err);
+    }
+}
+
+function closeLeaderboard() {
+    document.getElementById('leaderboardModal').style.display = 'none';
 }
 
 function renderCategories() {
