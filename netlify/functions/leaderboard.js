@@ -2,10 +2,9 @@ const fetch = require('node-fetch');
 
 exports.handler = async (event, context) => {
   // This requires the site to be linked and a NETLIFY_ACCESS_TOKEN or Admin Token available
-  // In a real scenario, you might need a Personal Access Token stored in env vars
-  const { SITE_ID, NETLIFY_ACCESS_TOKEN } = process.env;
+  const { MY_SITE_ID, NETLIFY_ACCESS_TOKEN } = process.env;
 
-  if (!SITE_ID || !NETLIFY_ACCESS_TOKEN) {
+  if (!MY_SITE_ID || !NETLIFY_ACCESS_TOKEN) {
     console.log("Missing configuration for leaderboard.");
     // Return empty state with a funny quote if config is missing or no users found
     return {
@@ -19,9 +18,7 @@ exports.handler = async (event, context) => {
 
   try {
     // Fetch users from Netlify API
-    // Note: This endpoint might vary based on your team/plan. 
-    // Standard endpoint: https://api.netlify.com/api/v1/sites/{site_id}/identity/users
-    const response = await fetch(`https://api.netlify.com/api/v1/sites/${SITE_ID}/identity/users`, {
+    const response = await fetch(`https://api.netlify.com/api/v1/sites/${MY_SITE_ID}/identity/users`, {
       headers: {
         "Authorization": `Bearer ${NETLIFY_ACCESS_TOKEN}`
       }
