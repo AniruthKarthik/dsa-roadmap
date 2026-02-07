@@ -94,6 +94,7 @@ select:focus { outline: none; border-color: #0071e3; }
             </div>
             <div class="auth-buttons" id="userMenu" style="display: none;">
                 <span id="userName" style="align-self: center; margin-right: 12px; font-weight: 500;"></span>
+                <button class="btn btn-outline" onclick="openProfile()" style="margin-right: 8px;">Settings</button>
                 <button class="btn btn-secondary" onclick="netlifyIdentity.logout()">Log Out</button>
             </div>
         </div>
@@ -148,6 +149,24 @@ select:focus { outline: none; border-color: #0071e3; }
 </div>
 
 <button class="reset-button" onclick="resetProgress()">Reset Progress</button>
+
+<!-- Profile/Username Modal -->
+<div class="modal-overlay" id="profileModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Profile Settings</h3>
+            <button class="close-modal" onclick="closeProfile()">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 24px;">
+            <div class="filter-group" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                <label class="filter-label">Display Name / Username</label>
+                <input type="text" id="usernameInput" style="width: 100%; padding: 12px; border: 1px solid #d2d2d7; border-radius: 8px;" placeholder="Enter new username...">
+                <p id="usernameStatus" style="font-size: 12px; margin-top: 4px;"></p>
+            </div>
+            <button class="btn btn-primary" onclick="updateUsername()" style="width: 100%; margin-top: 24px; padding: 12px;">Update Username</button>
+        </div>
+    </div>
+</div>
 
 <!-- Leaderboard Modal -->
 <div class="modal-overlay" id="leaderboardModal">
@@ -318,14 +337,18 @@ async function openLeaderboard() {
     const modal = document.getElementById('leaderboardModal');
     const content = document.getElementById('leaderboardContent');
     modal.style.display = 'flex';
-    content.innerHTML = 'Loading...';
+    content.innerHTML = '<div style="padding: 20px;">Fetching the elites...</div>';
     
     try {
         const response = await fetch('/.netlify/functions/leaderboard');
         const data = await response.json();
         
         if (data.error) {
-            content.innerHTML = '<p>Failed to load leaderboard. Please try again later.</p>';
+            content.innerHTML = `
+                <div style="padding: 20px; color: #c62828;">
+                    <p><strong>Leaderboard Unavailable</strong></p>
+                    <p style="font-size: 13px; margin-top: 8px;">Check if MY_SITE_ID and NETLIFY_ACCESS_TOKEN are set in Netlify Settings.</p>
+                </div>`;
             return;
         }
 
@@ -348,13 +371,70 @@ async function openLeaderboard() {
         content.innerHTML = html;
         
     } catch (err) {
-        content.innerHTML = '<p>Error loading leaderboard. Ensure functions are deployed.</p>';
+        content.innerHTML = `
+            <div style="padding: 20px; color: #c62828;">
+                <p><strong>Connection Error</strong></p>
+                <p style="font-size: 13px; margin-top: 8px;">Make sure the site is deployed and functions are enabled.</p>
+            </div>`;
         console.error(err);
     }
 }
 
 function closeLeaderboard() {
     document.getElementById('leaderboardModal').style.display = 'none';
+}
+
+function openProfile() {
+    const user = netlifyIdentity.currentUser();
+    if (!user) return;
+    
+    document.getElementById('profileModal').style.display = 'flex';
+    document.getElementById('usernameInput').value = user.user_metadata.full_name || '';
+    document.getElementById('usernameStatus').textContent = '';
+}
+
+function closeProfile() {
+    document.getElementById('profileModal').style.display = 'none';
+}
+
+async function updateUsername() {
+    const newName = document.getElementById('usernameInput').value.trim();
+    const status = document.getElementById('usernameStatus');
+    const user = netlifyIdentity.currentUser();
+    
+    if (!newName) {
+        status.textContent = 'Username cannot be empty';
+        status.style.color = '#c62828';
+        return;
+    }
+
+    status.textContent = 'Checking availability...';
+    status.style.color = '#6e6e73';
+
+    try {
+        // Simple check: fetch leaderboard and see if name exists
+        const response = await fetch('/.netlify/functions/leaderboard');
+        const data = await response.json();
+        
+        if (data.users && data.users.some(u => u.name.toLowerCase() === newName.toLowerCase() && u.name !== (user.user_metadata.full_name || ''))) {
+            status.textContent = 'Username already taken by another active solver';
+            status.style.color = '#c62828';
+            return;
+        }
+
+        await user.update({ data: { full_name: newName } });
+        status.textContent = 'Username updated successfully!';
+        status.style.color = '#2e7d32';
+        
+        // Update UI
+        document.getElementById('userName').textContent = newName;
+        setTimeout(closeProfile, 1500);
+        
+    } catch (err) {
+        status.textContent = 'Failed to update username';
+        status.style.color = '#c62828';
+        console.error(err);
+    }
 }
 
 function renderCategories() {
