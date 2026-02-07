@@ -351,13 +351,14 @@ async function openLeaderboard() {
             content.innerHTML = `
                 <div style="padding: 20px; color: #c62828;">
                     <p><strong>Leaderboard Unavailable</strong></p>
-                    <p style="font-size: 13px; margin-top: 8px;">Check if MY_SITE_ID and NETLIFY_ACCESS_TOKEN are set in Netlify Settings.</p>
+                    <p style="font-size: 13px; margin-top: 8px; font-family: monospace;">Error: ${data.error}</p>
+                    <p style="font-size: 12px; margin-top: 8px; color: #6e6e73;">Check MY_SITE_ID and NETLIFY_ACCESS_TOKEN in Netlify Settings.</p>
                 </div>`;
             return;
         }
 
         if (!data.users || data.users.length === 0) {
-            content.innerHTML = `<div style="padding: 20px; font-style: italic;">${data.message || 'No registered users yet...'}</div>`;
+            content.innerHTML = `<div style="padding: 20px; font-style: italic; color: #6e6e73;">${data.message || 'No registered users yet...'}</div>`;
             return;
         }
 
