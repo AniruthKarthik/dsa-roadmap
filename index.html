@@ -290,6 +290,7 @@ async function openLeaderboard() {
     const modal = document.getElementById('leaderboardModal');
     const content = document.getElementById('leaderboardContent');
     modal.style.display = 'flex';
+    content.innerHTML = 'Loading...';
     
     try {
         const response = await fetch('/.netlify/functions/leaderboard');
@@ -300,14 +301,14 @@ async function openLeaderboard() {
             return;
         }
 
-        if (data.length === 0) {
-            content.innerHTML = '<p>No data yet. Be the first!</p>';
+        if (!data.users || data.users.length === 0) {
+            content.innerHTML = `<div style="padding: 20px; font-style: italic;">${data.message || 'No registered users yet...'}</div>`;
             return;
         }
 
         const html = `
             <ul class="leaderboard-list">
-                ${data.map((user, index) => `
+                ${data.users.map((user, index) => `
                     <li class="leaderboard-item">
                         <span class="leaderboard-rank">#${index + 1}</span>
                         <span class="leaderboard-name">${user.name}</span>

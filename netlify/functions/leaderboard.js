@@ -7,15 +7,13 @@ exports.handler = async (event, context) => {
 
   if (!SITE_ID || !NETLIFY_ACCESS_TOKEN) {
     console.log("Missing configuration for leaderboard.");
-    // Return mock data for demonstration if config is missing
+    // Return empty state with a funny quote if config is missing or no users found
     return {
       statusCode: 200,
-      body: JSON.stringify([
-        { name: "Demo User 1", score: 45 },
-        { name: "Demo User 2", score: 32 },
-        { name: "You (Example)", score: 10 },
-        { name: "Configuration Needed", score: 0 }
-      ])
+      body: JSON.stringify({
+        message: "Zero solvers? Everyone must be in 'stealth mode' because heaven forbid anyone knows you're actually putting in the effort.",
+        users: []
+      })
     };
   }
 
@@ -42,12 +40,16 @@ exports.handler = async (event, context) => {
         score: completed
       };
     })
+    .filter(user => user.score > 0) // Only show users who solved something
     .sort((a, b) => b.score - a.score)
     .slice(0, 10);
 
     return {
       statusCode: 200,
-      body: JSON.stringify(leaderboard)
+      body: JSON.stringify({
+        message: leaderboard.length === 0 ? "Zero solvers? Everyone must be in 'stealth mode' because heaven forbid anyone knows you're actually putting in the effort." : "",
+        users: leaderboard
+      })
     };
 
   } catch (error) {
