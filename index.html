@@ -280,6 +280,10 @@ function init() {
     
     // Netlify Identity Events
     if (window.netlifyIdentity) {
+        // Handle existing login session immediately
+        const currentUser = netlifyIdentity.currentUser();
+        if (currentUser) updateAuthUI(currentUser);
+
         netlifyIdentity.on('init', user => {
             updateAuthUI(user);
             renderCategories();
@@ -320,16 +324,16 @@ function clearFilters() {
 function updateAuthUI(user) {
     const authButtons = document.getElementById('authButtons');
     const userMenu = document.getElementById('userMenu');
-    const userName = document.getElementById('userName');
+    const userNameElement = document.getElementById('userName');
 
     if (user) {
         authButtons.style.display = 'none';
         userMenu.style.display = 'flex';
-        userName.textContent = user.user_metadata.full_name || user.email;
+        userNameElement.textContent = (user.user_metadata && user.user_metadata.full_name) || user.email.split('@')[0];
     } else {
         authButtons.style.display = 'flex';
         userMenu.style.display = 'none';
-        userName.textContent = '';
+        userNameElement.textContent = '';
     }
 }
 
